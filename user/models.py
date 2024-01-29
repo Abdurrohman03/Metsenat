@@ -1,6 +1,6 @@
 from django.db import models
 from django.utils.safestring import mark_safe
-from django.contrib.auth.models import AbstractUser, User
+from django.contrib.auth.models import AbstractUser, User, AbstractBaseUser, BaseUserManager, PermissionsMixin
 from django.conf import settings
 from rest_framework_simplejwt.tokens import RefreshToken
 from phonenumber_field.modelfields import PhoneNumberField
@@ -29,7 +29,7 @@ class Homiy(AbstractUser):
     phone = PhoneNumberField(null=False, blank=False, unique=True, verbose_name='Telefon raqam')
     role = models.IntegerField(choices=ROLE, default=0, verbose_name='Shaxs')
     date_joined = models.DateTimeField(auto_now_add=True, verbose_name='Date created')
-    tolov_summasi = models.IntegerField(null=True, blank=True)
+    tolov_summasi = models.IntegerField(null=True, blank=True, verbose_name='Homiylik Summasi')
     holat = models.IntegerField(choices=HOLAT, default=0)
     tashkilot_nomi = models.CharField(max_length=255, null=True, blank=True)
     sarflangan_summa = models.IntegerField(null=True, blank=True)
@@ -66,6 +66,13 @@ class Student(User):
         (0, 'Bakalavr'),
         (1, 'Magistratura')
     )
+    groups = None
+    user_permissions = None
+    is_superuser = False
+    is_staff = False
+    username = None
+    is_active = False
+    password = None
     full_name = models.CharField(max_length=50)
     talabalik_turi = models.IntegerField(choices=TALABALIK_TURI, default=0)
     otm = models.ForeignKey(OTM, on_delete=models.SET_NULL, null=True)
@@ -88,3 +95,4 @@ class Student(User):
     class Meta:
         verbose_name = 'Talaba'
         verbose_name_plural = 'Talabalar'
+

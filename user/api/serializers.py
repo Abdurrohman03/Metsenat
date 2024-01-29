@@ -1,14 +1,9 @@
-from django.contrib.auth import authenticate
-from django.contrib.auth.models import update_last_login
-from rest_framework import serializers
-from rest_framework_jwt.settings import api_settings
-from user.models import User
 from rest_framework import serializers
 from phonenumber_field.serializerfields import PhoneNumberField
-from user.models import Homiy
+from user.models import Homiy, Student
 
 
-class LegalEntityHomiySerializer(serializers.Serializer):
+class LegalEntityHomiySerializer(serializers.ModelSerializer):
     full_name = serializers.CharField(max_length=255)
     phone = PhoneNumberField()
     tolov_summasi = serializers.IntegerField()
@@ -24,17 +19,8 @@ class LegalEntityHomiySerializer(serializers.Serializer):
         homiy.save()
         return homiy
 
-    def update(self, instance, validated_data):
-        instance.full_name = validated_data.get('full_name', instance.full_name)
-        instance.role = 1
-        instance.phone_number = validated_data.get('phone_number', instance.phone_number)
-        instance.tolov_summasi = validated_data.get('tolov_summasi', instance.tolov_summasi)
-        instance.tashkilot_nomi = validated_data.get('tashkilot_nomi', instance.tashkilot_nomi)
-        instance.save()
-        return instance
 
-
-class HomiySerializer(serializers.Serializer):
+class HomiyPOSTSerializer(serializers.ModelSerializer):
     full_name = serializers.CharField(max_length=255)
     phone = PhoneNumberField()
     tolov_summasi = serializers.IntegerField()
@@ -48,41 +34,35 @@ class HomiySerializer(serializers.Serializer):
         homiy.save()
         return homiy
 
-    def update(self, instance, validated_data):
-        instance.full_name = validated_data.get('full_name', instance.full_name)
-        instance.role = 1
-        instance.phone_number = validated_data.get('phone_number', instance.phone_number)
-        instance.tolov_summasi = validated_data.get('tolov_summasi', instance.tolov_summasi)
-        instance.save()
-        return instance
+
+class HomiylarGETSerializer(serializers.ModelSerializer):
+    date_joined = serializers.DateTimeField(format='%d-%m-%Y')
+    holat = serializers.CharField(source='get_holat_display')
+
+    class Meta:
+        model = Homiy
+        fields = ('id', 'full_name', 'phone', 'tolov_summasi', 'sarflangan_summa', 'date_joined', 'holat')
+
+    def get_holat_display(self, obj):
+        return dict(Homiy.HOLAT).get(obj.holat)
 
 
-JWT_PAYLOAD_HANDLER = api_settings.JWT_PAYLOAD_HANDLER
-JWT_ENCODE_HANDLER = api_settings.JWT_ENCODE_HANDLER
+class HomiyGETSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Homiy
+        fields = ('id', 'full_name', 'phone', 'tolov_summasi')
 
 
-class UserLoginSerializer(serializers.Serializer):
-    email = serializers.CharField(max_length=255)
-    password = serializers.CharField(max_length=128, write_only=True)
-    token = serializers.CharField(max_length=255, read_only=True)
+class HomiyUpdateSerializer(serializers.ModelSerializer):
+    holat = serializers.CharField(source='get_holat_display')
 
-    def validate(self, data):
-        email = data.get("email", None)
-        password = data.get("password", None)
-        user = authenticate(email=email, password=password)
-        if user is None:
-            raise serializers.ValidationError(
-                'A user with this email and password is not found.'
-            )
-        try:
-            payload = JWT_PAYLOAD_HANDLER(user)
-            jwt_token = JWT_ENCODE_HANDLER(payload)
-            update_last_login(None, user)
-        except User is None:
-            raise serializers.ValidationError(
-                'User with given email and password does not exists'
-            )
-        return {
-            'email': user.email,
-            'token': jwt_token
-        }
+    class Meta:
+        model = Homiy
+        fields = ('full_name', 'phone', 'holat', "tolov_summasi", 'tolov_turi')
+
+
+class TalabalarListCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Student
+        fields = ('id', 'full_name', 'talabalik_turi', 'otm', 'kontrakt_miqdori', 'ajratilgan_summa')
+
