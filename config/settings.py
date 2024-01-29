@@ -43,8 +43,9 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt.token_blacklist',
     # 'django.contrib.staticfiles',
     'drf_yasg',
-
-
+    'main',
+    'user',
+    'phonenumbers'
 ]
 
 MIDDLEWARE = [
